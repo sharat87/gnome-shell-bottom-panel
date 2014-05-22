@@ -14,6 +14,7 @@ const trayBox = Main.messageTray.actor.get_parent();
 
 let originalPanelY = panelBox.y;
 let originalTrayY = trayBox.y;
+let trayActorData = null;
 let arrowActors = null;
 
 function init() { }
@@ -30,6 +31,17 @@ function enable() {
     // XXX: Should this be restored when disabling? How?
     panelBox.raise(trayBox);
 
+    // Make the message tray track fullscreen-ness and disappear accordingly.
+    let trackDatas = Main.layoutManager._trackedActors;
+    for (let i = 0, len = trackDatas.length; i < len; ++i) {
+        let actorData = trackDatas[i];
+        if (actorData.actor === trayBox) {
+            actorData.trackFullscreen = true;
+            trayActorData = actorData;
+            break;
+        }
+    }
+
     // Change arrows' direction in panel.
     arrowActors = [];
     turnArrows(Main.panel.statusArea.aggregateMenu._indicators);
@@ -39,6 +51,7 @@ function enable() {
 function disable() {
     panelBox.y = originalPanelY;
     trayBox.y = originalTrayY;
+    trayActorData.trackFullscreen = false;
     for (var i = arrowActors.length; i-- > 0;)
         arrowActors[i].set_text('\u25BE');
 }

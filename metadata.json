@@ -3,5 +3,6 @@
   "description": "Moves the top panel to the bottom.",
   "version": 1,
   "shell-version": ["3.10"],
+  "url": "https://github.com/sharat87/gnome-shell-bottom-panel",
   "uuid": "bottom-panel@sharats.me"
 }

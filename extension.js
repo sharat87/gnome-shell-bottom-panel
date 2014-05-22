@@ -1,9 +1,6 @@
 //
 // A gnome-shell extension that moves the top panel to the bottom.
 //
-// TODO:
-// - The panel disappears behind the message tray when it is opened.
-//
 
 /*jshint esnext:true */
 /*global imports, global */
@@ -12,17 +9,28 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 
-const panelActor = Main.panel.actor;
-const panelBox = panelActor.get_parent();
+const panelBox = Main.panel.actor.get_parent();
+const trayBox = Main.messageTray.actor.get_parent();
 
 let originalPanelY = panelBox.y;
+let originalTrayY = trayBox.y;
 let arrowActors = null;
 
 function init() { }
 
 function enable() {
+    // Backup original values.
     originalPanelY = panelBox.y;
-    panelBox.y = global.screen.get_monitor_geometry(0).height - panelActor.get_height();
+    originalTrayY = trayBox.y;
+
+    // Move the panel and message tray.
+    panelBox.y = trayBox.y = Main.layoutManager.primaryMonitor.height - panelBox.height;
+
+    // Make the panel raise above the message tray.
+    // XXX: Should this be restored when disabling? How?
+    panelBox.raise(trayBox);
+
+    // Change arrows' direction in panel.
     arrowActors = [];
     turnArrows(Main.panel.statusArea.aggregateMenu._indicators);
     turnArrows(Main.panel.statusArea.appMenu._hbox);
@@ -30,6 +38,7 @@ function enable() {
 
 function disable() {
     panelBox.y = originalPanelY;
+    trayBox.y = originalTrayY;
     for (var i = arrowActors.length; i-- > 0;)
         arrowActors[i].set_text('\u25BE');
 }

@@ -9,13 +9,14 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 
-const panelBox = Main.panel.actor.get_parent();
-const trayBox = Main.messageTray.actor.get_parent();
+const panelBox = Main.layoutManager.panelBox;
+const trayBox = Main.layoutManager.trayBox;
 
-let originalPanelY = panelBox.y;
-let originalTrayY = trayBox.y;
-let trayActorData = null;
-let arrowActors = null;
+let originalPanelY = panelBox.y,
+    originalTrayY = trayBox.y,
+    trayActorData = null,
+    arrowActors = null,
+    panelAllocationHandlerId;
 
 function init() { }
 
@@ -24,8 +25,9 @@ function enable() {
     originalPanelY = panelBox.y;
     originalTrayY = trayBox.y;
 
-    // Move the panel and message tray.
-    panelBox.y = trayBox.y = Main.layoutManager.primaryMonitor.height - panelBox.height;
+    // Watch the panel size and move it along with the tray.
+    movePanel();
+    panelAllocationHandlerId = panelBox.connect('allocation-changed', movePanel);
 
     // Make the panel raise above the message tray.
     // XXX: Should this be restored when disabling? How?
@@ -52,8 +54,14 @@ function disable() {
     panelBox.y = originalPanelY;
     trayBox.y = originalTrayY;
     trayActorData.trackFullscreen = false;
+    panelBox.disconnect(panelAllocationHandlerId);
     for (var i = arrowActors.length; i-- > 0;)
         arrowActors[i].set_text('\u25BE');
+}
+
+function movePanel() {
+    var newY = Main.layoutManager.primaryMonitor.height - panelBox.height;
+    panelBox.y = trayBox.y = newY;
 }
 
 function turnArrows(actor) {

@@ -8,16 +8,20 @@
 const St = imports.gi.St;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
+const Clutter = imports.gi.Clutter;
+const Gtk = imports.gi.Gtk;
 
-const panelBox = Main.layoutManager.panelBox;
-const trayBox = Main.layoutManager.trayBox;
+const panelBox = Main.layoutManager.panelBox,
+      trayBox = Main.layoutManager.trayBox,
+      appMenu = Main.panel.statusArea.appMenu;
 
 let originalPanelY = panelBox.y,
     originalTrayY = trayBox.y,
     trayActorData = null,
     arrowActors = null,
     ctrlAltTabItem,
-    panelAllocationHandlerId;
+    panelAllocationHandlerId,
+    appMenuKeyPressHandlerId;
 
 function init() { }
 
@@ -50,6 +54,9 @@ function enable() {
     turnArrows(Main.panel.statusArea.aggregateMenu._indicators);
     turnArrows(Main.panel.statusArea.appMenu._hbox);
 
+    // Use UP arrow key to open menu when a panel button has focus.
+    appMenuKeyPressHandlerId = appMenu.actor.connect('key-press-event', onAppMenuKeyPress);
+
     // Rename 'Top Bar' in <C-A-Tab> popup to 'Bottom Bar'.
     if (!ctrlAltTabItem) {
         let tabItems = Main.ctrlAltTabManager._items;
@@ -69,6 +76,7 @@ function disable() {
     panelBox.disconnect(panelAllocationHandlerId);
     for (var i = arrowActors.length; i-- > 0;)
         arrowActors[i].set_text('\u25BE');
+    appMenu.actor.disconnect(appMenuKeyPressHandlerId);
     ctrlAltTabItem.name = 'Top Bar';
 }
 
@@ -87,4 +95,14 @@ function turnArrows(actor) {
             break;
         }
     }
+}
+
+function onAppMenuKeyPress(actor, event) {
+    if (appMenu.menu && event.get_key_symbol() == Clutter.KEY_Up) {
+        if (!appMenu.menu.isOpen)
+            appMenu.menu.toggle();
+        appMenu.menu.actor.navigate_focus(appMenu.actor, Gtk.DirectionType.DOWN, false);
+        return true;
+    }
+    return false;
 }

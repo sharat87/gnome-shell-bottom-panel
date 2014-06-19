@@ -16,6 +16,7 @@ let originalPanelY = panelBox.y,
     originalTrayY = trayBox.y,
     trayActorData = null,
     arrowActors = null,
+    ctrlAltTabItem,
     panelAllocationHandlerId;
 
 function init() { }
@@ -48,6 +49,17 @@ function enable() {
     arrowActors = [];
     turnArrows(Main.panel.statusArea.aggregateMenu._indicators);
     turnArrows(Main.panel.statusArea.appMenu._hbox);
+
+    // Rename 'Top Bar' in <C-A-Tab> popup to 'Bottom Bar'.
+    if (!ctrlAltTabItem) {
+        let tabItems = Main.ctrlAltTabManager._items;
+        for (let i in tabItems)
+            if (tabItems[i].root === Main.panel.actor) {
+                ctrlAltTabItem = tabItems[i];
+                break;
+            }
+    }
+    ctrlAltTabItem.name = 'Bottom Bar';
 }
 
 function disable() {
@@ -57,6 +69,7 @@ function disable() {
     panelBox.disconnect(panelAllocationHandlerId);
     for (var i = arrowActors.length; i-- > 0;)
         arrowActors[i].set_text('\u25BE');
+    ctrlAltTabItem.name = 'Top Bar';
 }
 
 function movePanel() {
